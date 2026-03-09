@@ -1,0 +1,337 @@
+/* ── LinkedIn Reply Assistant Styles ─────────────────────────────── */
+
+/* Trigger Button */
+#lra-trigger-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #0a66c2, #004182);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(10, 102, 194, 0.4);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#lra-trigger-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(10, 102, 194, 0.5);
+}
+
+/* Main Panel */
+#lra-assistant-panel {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 99999;
+  width: 380px;
+  max-height: 520px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#lra-assistant-panel.lra-hidden {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+}
+
+#lra-assistant-panel.lra-minimized .lra-body {
+  display: none;
+}
+
+/* Header */
+.lra-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #0a66c2, #004182);
+  color: white;
+  cursor: move;
+}
+
+.lra-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lra-logo {
+  font-size: 18px;
+}
+
+.lra-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.lra-header-right {
+  display: flex;
+  gap: 4px;
+}
+
+.lra-btn-minimize,
+.lra-btn-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lra-btn-minimize:hover,
+.lra-btn-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Body */
+.lra-body {
+  padding: 16px;
+}
+
+/* Intent Badge */
+.lra-intent-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid #0a66c2;
+  border-radius: 8px;
+  background: #f0f7ff;
+  margin-bottom: 12px;
+}
+
+.lra-intent-icon {
+  font-size: 20px;
+}
+
+.lra-intent-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #191919;
+}
+
+/* Confidence */
+.lra-confidence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.lra-confidence-bar {
+  flex: 1;
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.lra-confidence-fill {
+  height: 100%;
+  width: 0%;
+  background: #0a66c2;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.lra-confidence-text {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: right;
+}
+
+/* Response Preview */
+.lra-response-preview {
+  margin-bottom: 14px;
+}
+
+.lra-response-text {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+  background: #fafafa;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.lra-response-text:focus {
+  outline: none;
+  border-color: #0a66c2;
+  box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.15);
+}
+
+.lra-response-text.lra-editable {
+  background: #fff;
+  border-color: #0a66c2;
+}
+
+/* Action Buttons */
+.lra-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.lra-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lra-btn-copy {
+  background: #e8f0fe;
+  color: #0a66c2;
+}
+
+.lra-btn-copy:hover {
+  background: #d0e1f9;
+}
+
+.lra-btn-insert {
+  background: #0a66c2;
+  color: white;
+}
+
+.lra-btn-insert:hover {
+  background: #004182;
+}
+
+.lra-btn-edit {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.lra-btn-edit:hover {
+  background: #e0e0e0;
+}
+
+/* Manual Override Buttons */
+.lra-manual-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.lra-manual-label {
+  font-size: 11px;
+  color: #999;
+  margin-right: 2px;
+}
+
+.lra-btn-small {
+  padding: 4px 10px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: white;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.lra-btn-small:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+/* Toast Notification */
+.lra-toast {
+  position: fixed;
+  bottom: 150px;
+  right: 24px;
+  z-index: 999999;
+  padding: 10px 20px;
+  background: #333;
+  color: white;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
+.lra-toast.lra-toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  #lra-assistant-panel {
+    background: #1b1f23;
+    color: #e1e4e8;
+  }
+
+  .lra-intent-badge {
+    background: #0d1117;
+  }
+
+  .lra-intent-text {
+    color: #e1e4e8;
+  }
+
+  .lra-response-text {
+    background: #0d1117;
+    border-color: #30363d;
+    color: #e1e4e8;
+  }
+
+  .lra-btn-edit {
+    background: #30363d;
+    color: #e1e4e8;
+  }
+
+  .lra-btn-small {
+    background: #21262d;
+    border-color: #30363d;
+    color: #e1e4e8;
+  }
+
+  .lra-manual-actions {
+    border-top-color: #30363d;
+  }
+}

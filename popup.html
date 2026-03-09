@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Reply Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <span class="popup-logo">🤖</span>
+      <h1>LinkedIn Reply Assistant</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="popup-tabs">
+      <button class="popup-tab active" data-tab="settings">⚙️ Paramètres</button>
+      <button class="popup-tab" data-tab="templates">📝 Templates</button>
+      <button class="popup-tab" data-tab="stats">📊 Stats</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="popup-content" id="tab-settings">
+      <div class="form-group">
+        <label for="userName">Votre nom complet</label>
+        <input type="text" id="userName" placeholder="Louis FONTAINE">
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="autoDetect" checked>
+          Détection automatique des messages
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="showNotif" checked>
+          Notifications de détection
+        </label>
+      </div>
+      <button class="btn btn-primary" id="saveSettings">💾 Sauvegarder</button>
+    </div>
+
+    <!-- Templates Tab -->
+    <div class="popup-content hidden" id="tab-templates">
+      <div class="template-section">
+        <h3>💼 Réponse offre d'emploi</h3>
+        <textarea id="tpl-job-offer" rows="6" placeholder="Template pour les offres d'emploi..."></textarea>
+      </div>
+      <div class="template-section">
+        <h3>🤝 Réponse cooptation</h3>
+        <textarea id="tpl-cooptation" rows="6" placeholder="Template pour les demandes de cooptation..."></textarea>
+      </div>
+      <div class="template-section">
+        <h3>💬 Réponse autre</h3>
+        <textarea id="tpl-other" rows="4" placeholder="Template par défaut..."></textarea>
+      </div>
+      <p class="hint">Variables disponibles : <code>{firstName}</code>, <code>{name}</code>, <code>{userName}</code></p>
+      <button class="btn btn-primary" id="saveTemplates">💾 Sauvegarder les templates</button>
+      <button class="btn btn-secondary" id="resetTemplates">🔄 Réinitialiser</button>
+    </div>
+
+    <!-- Stats Tab -->
+    <div class="popup-content hidden" id="tab-stats">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" id="stat-analyzed">0</span>
+          <span class="stat-label">Messages analysés</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-copied">0</span>
+          <span class="stat-label">Réponses copiées</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-inserted">0</span>
+          <span class="stat-label">Réponses insérées</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="resetStats">🗑️ Réinitialiser les stats</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <span>v1.0.0 — Made by Louis</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
