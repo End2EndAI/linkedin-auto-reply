@@ -28,9 +28,7 @@ Louis FONTAINE`,
 
     cooptation: `Bonjour {firstName},
 
-Merci pour votre message et votre confiance. Je vais regarder dans mon réseau si un profil pourrait correspondre à ce que vous recherchez.
-
-Pourriez-vous m'en dire un peu plus sur le poste et le profil idéal ? Cela m'aidera à cibler les bonnes personnes.
+Merci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.
 
 Bien à vous,
 Louis FONTAINE`,
