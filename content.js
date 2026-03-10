@@ -1,7 +1,7 @@
 /**
  * LinkedIn Reply Assistant - Content Script
- * Runs on LinkedIn messaging pages to detect recruiter messages
- * and suggest appropriate responses
+ * Runs on LinkedIn messaging pages to detect recruiter messages,
+ * classify intent, detect language, and suggest appropriate responses
  */
 
 (function () {
@@ -15,9 +15,10 @@
     USER_NAME: 'Louis FONTAINE',
   };
 
-  // ── Default response templates ───────────────────────────────────
+  // ── Default response templates (FR + EN) ─────────────────────────
   const DEFAULT_TEMPLATES = {
-    job_offer: `Bonjour {firstName},
+    fr: {
+      job_offer: `Bonjour {firstName},
 
 Merci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l'air très intéressante ! Cependant, je me dois de décliner, n'étant pour l'instant pas en recherche d'un nouvel emploi.
 
@@ -26,31 +27,62 @@ Restons en contact pour de futures opportunités,
 Bien à vous,
 Louis FONTAINE`,
 
-    cooptation: `Bonjour {firstName},
+      cooptation: `Bonjour {firstName},
 
 Merci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.
 
 Bien à vous,
 Louis FONTAINE`,
 
-    other: `Bonjour {firstName},
+      other: `Bonjour {firstName},
 
 Merci pour votre message. Je reviens vers vous rapidement.
 
 Bien à vous,
-Louis FONTAINE`
+Louis FONTAINE`,
+    },
+
+    en: {
+      job_offer: `Hi {firstName},
+
+Thank you for reaching out and for this opportunity. It sounds really interesting! However, I must decline as I am not currently looking for a new position.
+
+Let's stay in touch for future opportunities,
+
+Best regards,
+Louis FONTAINE`,
+
+      cooptation: `Hi {firstName},
+
+Thank you for your message. I don't have anyone in mind at the moment, but I'll get back to you if that changes.
+
+Best regards,
+Louis FONTAINE`,
+
+      other: `Hi {firstName},
+
+Thank you for your message. I'll get back to you shortly.
+
+Best regards,
+Louis FONTAINE`,
+    },
   };
 
-  let templates = { ...DEFAULT_TEMPLATES };
+  let templates = JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
   let panelVisible = false;
   let lastAnalyzedMessage = '';
+  let currentLanguage = 'fr';
 
   // ── Load saved templates from storage ────────────────────────────
   function loadTemplates() {
     if (chrome?.storage?.sync) {
-      chrome.storage.sync.get(['templates', 'userName'], (data) => {
-        if (data.templates) {
-          templates = { ...DEFAULT_TEMPLATES, ...data.templates };
+      chrome.storage.sync.get(['templates_v2', 'templates', 'userName'], (data) => {
+        // Prefer v2 (bilingual) format, fall back to legacy
+        if (data.templates_v2) {
+          templates = { ...DEFAULT_TEMPLATES, ...data.templates_v2 };
+        } else if (data.templates) {
+          // Legacy: treat existing templates as French
+          templates.fr = { ...templates.fr, ...data.templates };
         }
         if (data.userName) {
           CONFIG.USER_NAME = data.userName;
@@ -61,9 +93,6 @@ Louis FONTAINE`
 
   // ── DOM Helpers ──────────────────────────────────────────────────
 
-  /**
-   * Try multiple selectors to find an element (LinkedIn changes DOM often)
-   */
   function querySelector(selectors) {
     for (const sel of selectors) {
       const el = document.querySelector(sel);
@@ -80,36 +109,23 @@ Louis FONTAINE`
     return [];
   }
 
-  /**
-   * Get the name of the current conversation partner
-   */
   function getConversationPartnerName() {
     const nameSelectors = [
-      // Thread header name
       '.msg-overlay-conversation-bubble--is-active .msg-overlay-conversation-bubble__header h2',
       '.msg-thread__link-to-profile h2',
       '.msg-entity-lockup__entity-title',
       '.msg-conversation-card__participant-names',
-      // Full page messaging
       '.msg-conversations-container__title-row h2',
       '.msg-thread .msg-entity-lockup__entity-title',
       'h2.msg-entity-lockup__entity-title',
-      // Newer LinkedIn layouts
       '[data-control-name="conversation_title"]',
       '.msg-overlay-bubble-header__title',
       '.msg-thread__title',
     ];
-
     const nameEl = querySelector(nameSelectors);
-    if (nameEl) {
-      return nameEl.textContent.trim();
-    }
-    return '';
+    return nameEl ? nameEl.textContent.trim() : '';
   }
 
-  /**
-   * Get the latest messages in the current conversation (from the other person)
-   */
   function getLatestReceivedMessages() {
     const messageSelectors = [
       '.msg-s-event-listitem__body',
@@ -117,22 +133,11 @@ Louis FONTAINE`
       '.msg-s-event__content',
       '.msg-s-message-list-content .msg-s-event-listitem',
     ];
-
     const messageEls = querySelectorAll(messageSelectors);
     if (messageEls.length === 0) return '';
-
-    // Get the last few messages (concatenated) to have context
-    const recentMessages = Array.from(messageEls)
-      .slice(-3)
-      .map(el => el.textContent.trim())
-      .join('\n');
-
-    return recentMessages;
+    return Array.from(messageEls).slice(-3).map(el => el.textContent.trim()).join('\n');
   }
 
-  /**
-   * Get the LinkedIn message input box
-   */
   function getMessageInput() {
     const inputSelectors = [
       '.msg-form__contenteditable[contenteditable="true"]',
@@ -146,7 +151,6 @@ Louis FONTAINE`
   // ── UI Panel ─────────────────────────────────────────────────────
 
   function createPanel() {
-    // Remove existing panel if any
     const existing = document.getElementById(CONFIG.PANEL_ID);
     if (existing) existing.remove();
 
@@ -159,14 +163,20 @@ Louis FONTAINE`
           <span class="lra-title">Reply Assistant</span>
         </div>
         <div class="lra-header-right">
-          <button class="lra-btn-minimize" title="Réduire">−</button>
-          <button class="lra-btn-close" title="Fermer">×</button>
+          <button class="lra-btn-minimize" title="Minimize">−</button>
+          <button class="lra-btn-close" title="Close">×</button>
         </div>
       </div>
       <div class="lra-body">
-        <div class="lra-intent-badge">
-          <span class="lra-intent-icon"></span>
-          <span class="lra-intent-text">Analyse en cours...</span>
+        <div class="lra-badges-row">
+          <div class="lra-intent-badge">
+            <span class="lra-intent-icon"></span>
+            <span class="lra-intent-text">Analysing…</span>
+          </div>
+          <div class="lra-lang-badge" title="Detected language">
+            <span class="lra-lang-flag"></span>
+            <span class="lra-lang-text"></span>
+          </div>
         </div>
         <div class="lra-confidence">
           <div class="lra-confidence-bar"><div class="lra-confidence-fill"></div></div>
@@ -176,21 +186,24 @@ Louis FONTAINE`
           <textarea class="lra-response-text" rows="8" readonly></textarea>
         </div>
         <div class="lra-actions">
-          <button class="lra-btn lra-btn-copy" title="Copier la réponse">
-            📋 Copier
+          <button class="lra-btn lra-btn-copy" title="Copy response">
+            📋 Copy
           </button>
-          <button class="lra-btn lra-btn-insert" title="Insérer dans le champ de message">
-            ✏️ Insérer
+          <button class="lra-btn lra-btn-insert" title="Insert into message field">
+            ✏️ Insert
           </button>
-          <button class="lra-btn lra-btn-edit" title="Modifier la réponse">
-            🔧 Modifier
+          <button class="lra-btn lra-btn-edit" title="Edit response">
+            🔧 Edit
           </button>
         </div>
         <div class="lra-manual-actions">
-          <span class="lra-manual-label">Forcer le type :</span>
-          <button class="lra-btn-small lra-force-job">💼 Offre</button>
-          <button class="lra-btn-small lra-force-coopt">🤝 Cooptation</button>
-          <button class="lra-btn-small lra-force-other">💬 Autre</button>
+          <span class="lra-manual-label">Override:</span>
+          <button class="lra-btn-small lra-force-job">💼 Job</button>
+          <button class="lra-btn-small lra-force-coopt">🤝 Referral</button>
+          <button class="lra-btn-small lra-force-other">💬 Other</button>
+          <span class="lra-manual-sep">|</span>
+          <button class="lra-btn-small lra-force-fr">🇫🇷</button>
+          <button class="lra-btn-small lra-force-en">🇬🇧</button>
         </div>
       </div>
     `;
@@ -210,7 +223,7 @@ Louis FONTAINE`
     panel.querySelector('.lra-btn-copy').addEventListener('click', () => {
       const text = panel.querySelector('.lra-response-text').value;
       navigator.clipboard.writeText(text).then(() => {
-        showToast('Réponse copiée !');
+        showToast(currentLanguage === 'fr' ? 'Réponse copiée !' : 'Response copied!');
       });
     });
 
@@ -223,20 +236,24 @@ Louis FONTAINE`
       const textarea = panel.querySelector('.lra-response-text');
       textarea.readOnly = !textarea.readOnly;
       textarea.classList.toggle('lra-editable');
-      if (!textarea.readOnly) {
-        textarea.focus();
-      }
+      if (!textarea.readOnly) textarea.focus();
     });
 
-    // Force intent buttons
-    panel.querySelector('.lra-force-job').addEventListener('click', () => {
-      updatePanelWithIntent('job_offer', 1.0);
+    // Force intent
+    panel.querySelector('.lra-force-job').addEventListener('click', () => updatePanelWithIntent('job_offer', 1.0, currentLanguage));
+    panel.querySelector('.lra-force-coopt').addEventListener('click', () => updatePanelWithIntent('cooptation', 1.0, currentLanguage));
+    panel.querySelector('.lra-force-other').addEventListener('click', () => updatePanelWithIntent('other', 1.0, currentLanguage));
+
+    // Force language
+    panel.querySelector('.lra-force-fr').addEventListener('click', () => {
+      currentLanguage = 'fr';
+      lastAnalyzedMessage = ''; // force re-render
+      analyzeCurrentConversation();
     });
-    panel.querySelector('.lra-force-coopt').addEventListener('click', () => {
-      updatePanelWithIntent('cooptation', 1.0);
-    });
-    panel.querySelector('.lra-force-other').addEventListener('click', () => {
-      updatePanelWithIntent('other', 1.0);
+    panel.querySelector('.lra-force-en').addEventListener('click', () => {
+      currentLanguage = 'en';
+      lastAnalyzedMessage = '';
+      analyzeCurrentConversation();
     });
 
     return panel;
@@ -257,81 +274,75 @@ Louis FONTAINE`
   function insertIntoMessageBox(text) {
     const input = getMessageInput();
     if (!input) {
-      showToast('Champ de message non trouvé');
+      showToast(currentLanguage === 'fr' ? 'Champ de message non trouvé' : 'Message field not found');
       return;
     }
-
-    // Focus the input
     input.focus();
-
-    // Clear existing content
     input.innerHTML = '';
-
-    // Create paragraph elements for each line (LinkedIn uses <p> tags)
-    const lines = text.split('\n');
-    lines.forEach((line) => {
+    text.split('\n').forEach((line) => {
       const p = document.createElement('p');
-      if (line.trim() === '') {
-        p.innerHTML = '<br>';
-      } else {
-        p.textContent = line;
-      }
+      p.innerHTML = line.trim() === '' ? '<br>' : document.createTextNode(line).textContent;
       input.appendChild(p);
     });
-
-    // Trigger input event so LinkedIn registers the change
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
-
-    showToast('Réponse insérée !');
+    showToast(currentLanguage === 'fr' ? 'Réponse insérée !' : 'Response inserted!');
   }
 
   // ── Panel Update Logic ───────────────────────────────────────────
 
   const INTENT_CONFIG = {
-    job_offer: {
-      icon: '💼',
-      label: 'Proposition d\'emploi',
-      color: '#0a66c2',
+    fr: {
+      job_offer:   { icon: '💼', label: 'Proposition d\'emploi',     color: '#0a66c2' },
+      cooptation:  { icon: '🤝', label: 'Demande de cooptation',    color: '#057642' },
+      other:       { icon: '💬', label: 'Autre message',            color: '#666666' },
     },
-    cooptation: {
-      icon: '🤝',
-      label: 'Demande de cooptation',
-      color: '#057642',
-    },
-    other: {
-      icon: '💬',
-      label: 'Autre message',
-      color: '#666666',
+    en: {
+      job_offer:   { icon: '💼', label: 'Job opportunity',          color: '#0a66c2' },
+      cooptation:  { icon: '🤝', label: 'Referral request',         color: '#057642' },
+      other:       { icon: '💬', label: 'Other message',            color: '#666666' },
     },
   };
 
-  function updatePanelWithIntent(intent, confidence) {
+  const LANG_DISPLAY = {
+    fr: { flag: '🇫🇷', label: 'Français' },
+    en: { flag: '🇬🇧', label: 'English' },
+  };
+
+  function updatePanelWithIntent(intent, confidence, language) {
     const panel = document.getElementById(CONFIG.PANEL_ID);
     if (!panel) return;
 
-    const config = INTENT_CONFIG[intent] || INTENT_CONFIG.other;
+    const lang = language || 'fr';
+    currentLanguage = lang;
+    const config = (INTENT_CONFIG[lang] || INTENT_CONFIG.fr)[intent] || INTENT_CONFIG.fr.other;
+    const langDisplay = LANG_DISPLAY[lang] || LANG_DISPLAY.fr;
     const partnerName = getConversationPartnerName();
     const firstName = IntentClassifier.extractFirstName(partnerName);
 
-    // Update intent badge
+    // Intent badge
     panel.querySelector('.lra-intent-icon').textContent = config.icon;
     panel.querySelector('.lra-intent-text').textContent = config.label;
     panel.querySelector('.lra-intent-badge').style.borderColor = config.color;
 
-    // Update confidence bar
+    // Language badge
+    panel.querySelector('.lra-lang-flag').textContent = langDisplay.flag;
+    panel.querySelector('.lra-lang-text').textContent = langDisplay.label;
+
+    // Confidence
     const confPercent = Math.round(confidence * 100);
     panel.querySelector('.lra-confidence-fill').style.width = `${confPercent}%`;
     panel.querySelector('.lra-confidence-fill').style.backgroundColor = config.color;
-    panel.querySelector('.lra-confidence-text').textContent = `Confiance : ${confPercent}%`;
+    const confLabel = lang === 'fr' ? 'Confiance' : 'Confidence';
+    panel.querySelector('.lra-confidence-text').textContent = `${confLabel} : ${confPercent}%`;
 
-    // Generate response
-    let response = templates[intent] || templates.other;
-    response = response.replace(/\{firstName\}/g, firstName || 'Bonjour');
+    // Pick the right template for this language + intent
+    const langTemplates = templates[lang] || templates.fr;
+    let response = langTemplates[intent] || langTemplates.other;
+    response = response.replace(/\{firstName\}/g, firstName || (lang === 'fr' ? 'Bonjour' : 'Hi'));
     response = response.replace(/\{name\}/g, partnerName || '');
     response = response.replace(/\{userName\}/g, CONFIG.USER_NAME);
 
-    // Update response textarea
     const textarea = panel.querySelector('.lra-response-text');
     textarea.value = response;
     textarea.readOnly = true;
@@ -342,22 +353,17 @@ Louis FONTAINE`
 
   function analyzeCurrentConversation() {
     const messageText = getLatestReceivedMessages();
-
-    // Don't re-analyze the same message
     if (!messageText || messageText === lastAnalyzedMessage) return;
     lastAnalyzedMessage = messageText;
 
     const result = IntentClassifier.classify(messageText);
 
-    // Only show panel for classified messages
     if (result.intent !== 'other' || result.scores.job > 0 || result.scores.cooptation > 0) {
       let panel = document.getElementById(CONFIG.PANEL_ID);
-      if (!panel) {
-        panel = createPanel();
-      }
+      if (!panel) panel = createPanel();
       panel.classList.remove('lra-hidden');
       panelVisible = true;
-      updatePanelWithIntent(result.intent, result.confidence);
+      updatePanelWithIntent(result.intent, result.confidence, result.language);
     }
   }
 
@@ -370,14 +376,10 @@ Louis FONTAINE`
     btn.title = 'LinkedIn Reply Assistant';
     btn.addEventListener('click', () => {
       let panel = document.getElementById(CONFIG.PANEL_ID);
-      if (!panel) {
-        panel = createPanel();
-      }
+      if (!panel) panel = createPanel();
       panel.classList.toggle('lra-hidden');
       panelVisible = !panel.classList.contains('lra-hidden');
-
       if (panelVisible) {
-        // Force analysis
         lastAnalyzedMessage = '';
         analyzeCurrentConversation();
       }
@@ -391,33 +393,17 @@ Louis FONTAINE`
     console.log('[LinkedIn Reply Assistant] Initializing...');
     loadTemplates();
     createTriggerButton();
-
-    // Periodic check for new messages
     setInterval(analyzeCurrentConversation, CONFIG.CHECK_INTERVAL);
-
-    // Also observe DOM mutations for conversation changes
-    const observer = new MutationObserver(debounce(() => {
-      analyzeCurrentConversation();
-    }, CONFIG.DEBOUNCE_MS));
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
+    const observer = new MutationObserver(debounce(() => analyzeCurrentConversation(), CONFIG.DEBOUNCE_MS));
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     console.log('[LinkedIn Reply Assistant] Ready!');
   }
 
   function debounce(fn, ms) {
     let timer;
-    return function (...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), ms);
-    };
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
   }
 
-  // Wait for page to be ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

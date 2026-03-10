@@ -110,6 +110,13 @@
   padding: 16px;
 }
 
+/* Badges Row */
+.lra-badges-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 /* Intent Badge */
 .lra-intent-badge {
   display: flex;
@@ -119,7 +126,30 @@
   border: 2px solid #0a66c2;
   border-radius: 8px;
   background: #f0f7ff;
-  margin-bottom: 12px;
+  flex: 1;
+}
+
+/* Language Badge */
+.lra-lang-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.lra-lang-flag {
+  font-size: 18px;
+}
+
+.lra-lang-text {
+  font-size: 12px;
 }
 
 .lra-intent-icon {
@@ -276,6 +306,12 @@
   border-color: #bbb;
 }
 
+.lra-manual-sep {
+  color: #ddd;
+  font-size: 14px;
+  margin: 0 2px;
+}
+
 /* Toast Notification */
 .lra-toast {
   position: fixed;
@@ -333,5 +369,11 @@
 
   .lra-manual-actions {
     border-top-color: #30363d;
+  }
+
+  .lra-lang-badge {
+    background: #161b22;
+    border-color: #30363d;
+    color: #e1e4e8;
   }
 }
