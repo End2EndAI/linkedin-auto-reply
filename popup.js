@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resetTemplates').addEventListener('click', () => {
     const defaults = {
       job_offer: `Bonjour {firstName},\n\nMerci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l'air très intéressante ! Cependant, je me dois de décliner, n'étant pour l'instant pas en recherche d'un nouvel emploi.\n\nRestons en contact pour de futures opportunités,\n\nBien à vous,\nLouis FONTAINE`,
-      cooptation: `Bonjour {firstName},\n\nMerci pour votre message et votre confiance. Je vais regarder dans mon réseau si un profil pourrait correspondre à ce que vous recherchez.\n\nPourriez-vous m'en dire un peu plus sur le poste et le profil idéal ? Cela m'aidera à cibler les bonnes personnes.\n\nBien à vous,\nLouis FONTAINE`,
+      cooptation: `Bonjour {firstName},\n\nMerci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.\n\nBien à vous,\nLouis FONTAINE`,
       other: `Bonjour {firstName},\n\nMerci pour votre message. Je reviens vers vous rapidement.\n\nBien à vous,\nLouis FONTAINE`
     };
 
