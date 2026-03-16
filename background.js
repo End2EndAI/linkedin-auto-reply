@@ -6,7 +6,7 @@
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.storage.sync.set({
-      userName: 'Louis FONTAINE',
+      userName: '',
       templates_v2: {
         fr: {
           job_offer: `Bonjour {firstName},
@@ -16,21 +16,21 @@ Merci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l
 Restons en contact pour de futures opportunités,
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
 
           cooptation: `Bonjour {firstName},
 
 Merci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
 
           other: `Bonjour {firstName},
 
 Merci pour votre message. Je reviens vers vous rapidement.
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
         },
 
         en: {
@@ -41,21 +41,21 @@ Thank you for reaching out and for this opportunity. It sounds really interestin
 Let's stay in touch for future opportunities,
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
 
           cooptation: `Hi {firstName},
 
 Thank you for your message. I don't have anyone in mind at the moment, but I'll get back to you if that changes.
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
 
           other: `Hi {firstName},
 
 Thank you for your message. I'll get back to you shortly.
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
         },
       },
       stats: {

@@ -6,14 +6,14 @@
 // ── Default templates (keep in sync with background.js) ───────────
 const DEFAULTS = {
   fr: {
-    job_offer: `Bonjour {firstName},\n\nMerci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l'air très intéressante ! Cependant, je me dois de décliner, n'étant pour l'instant pas en recherche d'un nouvel emploi.\n\nRestons en contact pour de futures opportunités,\n\nBien à vous,\nLouis FONTAINE`,
-    cooptation: `Bonjour {firstName},\n\nMerci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.\n\nBien à vous,\nLouis FONTAINE`,
-    other: `Bonjour {firstName},\n\nMerci pour votre message. Je reviens vers vous rapidement.\n\nBien à vous,\nLouis FONTAINE`,
+    job_offer: `Bonjour {firstName},\n\nMerci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l'air très intéressante ! Cependant, je me dois de décliner, n'étant pour l'instant pas en recherche d'un nouvel emploi.\n\nRestons en contact pour de futures opportunités,\n\nBien à vous,\n{userName}`,
+    cooptation: `Bonjour {firstName},\n\nMerci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.\n\nBien à vous,\n{userName}`,
+    other: `Bonjour {firstName},\n\nMerci pour votre message. Je reviens vers vous rapidement.\n\nBien à vous,\n{userName}`,
   },
   en: {
-    job_offer: `Hi {firstName},\n\nThank you for reaching out and for this opportunity. It sounds really interesting! However, I must decline as I am not currently looking for a new position.\n\nLet's stay in touch for future opportunities,\n\nBest regards,\nLouis FONTAINE`,
-    cooptation: `Hi {firstName},\n\nThank you for your message. I don't have anyone in mind at the moment, but I'll get back to you if that changes.\n\nBest regards,\nLouis FONTAINE`,
-    other: `Hi {firstName},\n\nThank you for your message. I'll get back to you shortly.\n\nBest regards,\nLouis FONTAINE`,
+    job_offer: `Hi {firstName},\n\nThank you for reaching out and for this opportunity. It sounds really interesting! However, I must decline as I am not currently looking for a new position.\n\nLet's stay in touch for future opportunities,\n\nBest regards,\n{userName}`,
+    cooptation: `Hi {firstName},\n\nThank you for your message. I don't have anyone in mind at the moment, but I'll get back to you if that changes.\n\nBest regards,\n{userName}`,
+    other: `Hi {firstName},\n\nThank you for your message. I'll get back to you shortly.\n\nBest regards,\n{userName}`,
   },
 };
 
