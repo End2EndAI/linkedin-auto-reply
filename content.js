@@ -12,7 +12,7 @@
     PANEL_ID: 'lra-assistant-panel',
     CHECK_INTERVAL: 2000,
     DEBOUNCE_MS: 500,
-    USER_NAME: 'Louis FONTAINE',
+    USER_NAME: '',
   };
 
   // ── Default response templates (FR + EN) ─────────────────────────
@@ -25,21 +25,21 @@ Merci de m'avoir contacté et de m'avoir proposé cette opportunité. Elle m'a l
 Restons en contact pour de futures opportunités,
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
 
       cooptation: `Bonjour {firstName},
 
 Merci pour votre message. Je n'ai personne en tête pour le moment, mais je reviens vers vous si j'ai du nouveau.
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
 
       other: `Bonjour {firstName},
 
 Merci pour votre message. Je reviens vers vous rapidement.
 
 Bien à vous,
-Louis FONTAINE`,
+{userName}`,
     },
 
     en: {
@@ -50,21 +50,21 @@ Thank you for reaching out and for this opportunity. It sounds really interestin
 Let's stay in touch for future opportunities,
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
 
       cooptation: `Hi {firstName},
 
 Thank you for your message. I don't have anyone in mind at the moment, but I'll get back to you if that changes.
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
 
       other: `Hi {firstName},
 
 Thank you for your message. I'll get back to you shortly.
 
 Best regards,
-Louis FONTAINE`,
+{userName}`,
     },
   };
 
@@ -72,11 +72,12 @@ Louis FONTAINE`,
   let panelVisible = false;
   let lastAnalyzedMessage = '';
   let currentLanguage = 'fr';
+  let autoDetectEnabled = true;
 
   // ── Load saved templates from storage ────────────────────────────
   function loadTemplates() {
     if (chrome?.storage?.sync) {
-      chrome.storage.sync.get(['templates_v2', 'templates', 'userName'], (data) => {
+      chrome.storage.sync.get(['templates_v2', 'templates', 'userName', 'autoDetect'], (data) => {
         // Prefer v2 (bilingual) format, fall back to legacy
         if (data.templates_v2) {
           templates = { ...DEFAULT_TEMPLATES, ...data.templates_v2 };
@@ -87,6 +88,7 @@ Louis FONTAINE`,
         if (data.userName) {
           CONFIG.USER_NAME = data.userName;
         }
+        autoDetectEnabled = data.autoDetect !== false;
       });
     }
   }
@@ -224,12 +226,14 @@ Louis FONTAINE`,
       const text = panel.querySelector('.lra-response-text').value;
       navigator.clipboard.writeText(text).then(() => {
         showToast(currentLanguage === 'fr' ? 'Réponse copiée !' : 'Response copied!');
+        chrome.runtime.sendMessage({ type: 'UPDATE_STATS', stat: 'repliesCopied' });
       });
     });
 
     panel.querySelector('.lra-btn-insert').addEventListener('click', () => {
       const text = panel.querySelector('.lra-response-text').value;
       insertIntoMessageBox(text);
+      chrome.runtime.sendMessage({ type: 'UPDATE_STATS', stat: 'repliesInserted' });
     });
 
     panel.querySelector('.lra-btn-edit').addEventListener('click', () => {
@@ -248,12 +252,12 @@ Louis FONTAINE`,
     panel.querySelector('.lra-force-fr').addEventListener('click', () => {
       currentLanguage = 'fr';
       lastAnalyzedMessage = ''; // force re-render
-      analyzeCurrentConversation();
+      analyzeCurrentConversation('fr');
     });
     panel.querySelector('.lra-force-en').addEventListener('click', () => {
       currentLanguage = 'en';
       lastAnalyzedMessage = '';
-      analyzeCurrentConversation();
+      analyzeCurrentConversation('en');
     });
 
     return panel;
@@ -281,7 +285,11 @@ Louis FONTAINE`,
     input.innerHTML = '';
     text.split('\n').forEach((line) => {
       const p = document.createElement('p');
-      p.innerHTML = line.trim() === '' ? '<br>' : document.createTextNode(line).textContent;
+      if (line.trim() === '') {
+        p.innerHTML = '<br>';
+      } else {
+        p.textContent = line;
+      }
       input.appendChild(p);
     });
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -351,19 +359,22 @@ Louis FONTAINE`,
 
   // ── Main Analysis Loop ───────────────────────────────────────────
 
-  function analyzeCurrentConversation() {
+  function analyzeCurrentConversation(forcedLanguage) {
+    if (!forcedLanguage && !autoDetectEnabled) return;
     const messageText = getLatestReceivedMessages();
     if (!messageText || messageText === lastAnalyzedMessage) return;
     lastAnalyzedMessage = messageText;
 
     const result = IntentClassifier.classify(messageText);
+    const language = forcedLanguage || result.language;
 
     if (result.intent !== 'other' || result.scores.job > 0 || result.scores.cooptation > 0) {
       let panel = document.getElementById(CONFIG.PANEL_ID);
       if (!panel) panel = createPanel();
       panel.classList.remove('lra-hidden');
       panelVisible = true;
-      updatePanelWithIntent(result.intent, result.confidence, result.language);
+      updatePanelWithIntent(result.intent, result.confidence, language);
+      chrome.runtime.sendMessage({ type: 'UPDATE_STATS', stat: 'messagesAnalyzed' });
     }
   }
 
@@ -381,7 +392,7 @@ Louis FONTAINE`,
       panelVisible = !panel.classList.contains('lra-hidden');
       if (panelVisible) {
         lastAnalyzedMessage = '';
-        analyzeCurrentConversation();
+        analyzeCurrentConversation(currentLanguage !== 'fr' ? currentLanguage : undefined);
       }
     });
     document.body.appendChild(btn);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Reply Assistant",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Assistant intelligent pour répondre aux messages des recruteurs sur LinkedIn",
   "permissions": ["storage"],
   "content_scripts": [
