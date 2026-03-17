@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-extension.png" alt="LinkedIn Reply Assistant" width="512" height="512" />
+  <img src="assets/logo-extension.png" alt="LinkedIn Reply Assistant" width="400" height="400" />
 </p>
 
 <h1 align="center">LinkedIn Reply Assistant</h1>
