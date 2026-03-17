@@ -13,6 +13,8 @@
   <img src="https://img.shields.io/badge/manifest-v3-blue?style=for-the-badge" />
   <img src="https://img.shields.io/badge/zero-dependencies-orange?style=for-the-badge" />
   <img src="https://img.shields.io/badge/languages-FR%20%7C%20EN-purple?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/contributions-welcome-brightgreen?style=for-the-badge" />
 </p>
 
 <br/>
@@ -70,7 +72,7 @@ No data leaves your browser. No API calls. No accounts. No tracking. Everything 
 ### Step 1: Download
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/linkedin-auto-reply.git
+git clone https://github.com/End2EndAI/linkedin-auto-reply.git
 ```
 
 Or click the green **Code** button above, then **Download ZIP**, and unzip it anywhere on your computer.
