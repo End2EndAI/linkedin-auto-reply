@@ -220,5 +220,5 @@ MIT License. See [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  Built by <a href="https://www.linkedin.com/in/louisfontaine/">Louis Fontaine</a> with the help of Claude
+  Built by <a href="https://github.com/End2EndAI">End2EndAI</a> with the help of ❤️ Claude Code ❤️
 </p>
